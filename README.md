@@ -101,12 +101,17 @@ nano-class model and loading narrowly cuts that to a fixed universal set — `qu
 `semantic_search`, `fetch_conversation_attachment` — plus the tools for the classified
 categories. It helps accuracy too: fewer wrong tools to choose from.
 
-**Tools are consolidated, not granular.** A single `mutate_issue` replaces `create_issue`,
-`update_issue`, `delete_issue`, `resolve_issue` and `add_issue_comment`. Five near-identical
-schemas cost tokens on every call and give the model five chances to pick the wrong one. The
-schedule category keeps its import tools separate (`extract_file_for_schedule`,
+**Consolidated at the model boundary, atomic underneath.** The schema the executor sees exposes
+one `mutate_issue`. Behind it, `create_issue`, `update_issue`, `delete_issue` and
+`resolve_issue` remain separate functions with their own parameter validation. The two layers
+optimise for different things: five near-identical schemas cost tokens on every call and give
+the model five chances to pick wrong, while five distinct implementations each get to enforce
+their own preconditions. Collapsing the schema without collapsing the implementation gets both.
+
+The schedule category keeps its import tools separate (`extract_file_for_schedule`,
 `read_schedule_cache`, `update_schedule_cache`, `import_schedule_json`) because that flow is
-genuinely agentic — it reads a file, caches an interpretation, revises it, then commits.
+genuinely multi-step — read a file, cache an interpretation, revise it, then commit — and
+flattening it into one call would remove the points where a human can intervene.
 
 **Execution is durable and can pause.** The pipeline persists a phase in `ai_jobs.phase`:
 
@@ -127,6 +132,11 @@ in hardware — `schedule`, `gantt`, `EVT`, `DVT`, `PVT`, `MP`, `BOM`, `parts` �
 **Permissions are checked in the core, not per tool.** What the agent can read and change is
 bounded by what the asking user can, enforced once rather than re-implemented in each handler.
 
+**History is sanitised before it is replayed.** Conversation passed back to the model is filtered
+to natural user and assistant turns with tool calls stripped out, bounded to recent turns. An
+agent re-reading its own tool invocations tends to repeat them; giving it the conversation and
+not the transcript of its own machinery avoids that.
+
 **It reports what it could not fetch.** Asked for project status while the schedule query was
 erroring, the agent returned the metrics it had and stated plainly that it could not pull the
 detailed task list and that this blocked a precise delayed-versus-plan call. An agent that
@@ -136,9 +146,18 @@ invents the missing half is worse than useless on a program with a ship date.
 
 ## Retrieval
 
-One semantic index spans issues, files, notes, chat and email, built by a dedicated pipeline
-rather than a single embed call: per-source `fetchers`, format-aware `parsers`, a `chunker`, and
-`text-embedding-3-small` vectors. Backfill and incremental paths are separate functions
+One semantic index spans nine content types — issues, schedules, schedule items, personal notes,
+shared notes, AI-inbox email summaries, channel messages, parsed files, and project health scores
+— built by a dedicated pipeline rather than a single embed call: per-source `fetchers`,
+format-aware `parsers`, a `chunker`, and `text-embedding-3-small` vectors. Health scores being
+embedded alongside everything else is deliberate: "what has been going wrong on this project" is
+a retrieval question, not just a dashboard.
+
+Field naming was standardised across every type (`title`, never `name`) specifically so retrieval
+and tool code stop special-casing. Archiving deliberately did *not* get the same treatment: notes
+use an `archived` boolean because a user restores them, while issues and tasks use
+`status = 'archived'` because archiving is a workflow state in their lifecycle. Two patterns,
+because they are two different concepts wearing the same word. Backfill and incremental paths are separate functions
 (`batch-embed-all-projects`, `batch-embed-project`, `batch-embed-messages`,
 `generate-embeddings`), so re-indexing one project does not mean re-indexing the workspace.
 
