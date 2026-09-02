@@ -214,11 +214,35 @@ to stop it being buried in a thread — not to silently rewrite the spec.
 
 ## Health is a forecast, and it shows its work
 
-Daily cron jobs compute a ship-date risk score and a next-week prediction. The prediction lists
-its inputs rather than emitting a number: no tasks completed last week, no tasks due next week,
-two active blockers, 26 overdue tasks. Alongside it sits a five-axis risk breakdown — schedule,
-blockers, dependencies, stability, buffer — and a trend line that makes a flat score legible as
-the warning it is.
+A daily job computes a ship-date risk score from five weighted components. The weights are the
+opinion:
+
+| Component | Weight | What it measures |
+|---|---|---|
+| Schedule execution | **40%** | completion rate, on-time rate, overdue penalty, late-start penalty |
+| Blocking issues | 25% | count of active and critical blockers, **plus their average age** |
+| Dependency health | 15% | dependency chains resolving or not |
+| Milestone stability | 15% | push-backs penalised, **pull-forwards rewarded**, churn penalised separately |
+| Buffer | 5% | slack before the next gate; seven days scores full marks |
+
+Schedule execution carrying 40% is the hardware-specific judgment. On a program heading for mass
+production the schedule *is* the product — a beautiful design that misses its PVT window is
+worth nothing — so the score is dominated by whether work is landing on time.
+
+Two smaller choices matter more than their weight suggests. **Blocker age is scored, not just
+blocker count**: one issue open for 160 days is a different signal from four opened this week,
+and a count alone cannot tell them apart. **Milestone stability separates direction from
+volatility**: pulling a date forward earns a bonus, pushing it back costs, and moving it
+repeatedly costs again regardless of direction. Moving a date is not automatically bad; being
+unable to hold one is.
+
+Scores land in buckets — 90 and above excellent, 70 healthy, 50 warning, below that critical —
+and every run also writes a history row. The trend line exists because history is retained on
+purpose, and a score sitting flat at 69 for fourteen days is the finding, not the absence of one.
+
+The forecast that sits on top lists its inputs rather than just emitting a number: no tasks
+completed last week, no tasks due next week, two active blockers, 26 overdue tasks. A PM asked to
+act on a score will not act on a score; they will act on the four facts under it.
 
 Recommendations are bound to specific named issues rather than offered as general advice, which
 is the difference between a dashboard a PM reads once and one they act on.
