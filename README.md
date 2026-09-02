@@ -13,6 +13,26 @@ Zyras puts all of it in one project context and runs a resumable agent on top of
 I spent a year and a half as a PM for audio products at ASUS running exactly this workflow
 across ID, ME, EE, FW, acoustics, validation and manufacturing. Zyras is that job, encoded.
 
+> ### At a glance
+>
+> **Context** — hardware teams run BOMs in Excel, issues in Jira, schedules in a Gantt tool and
+> supplier decisions in email. None of those tools knows that a supplier email just invalidated a
+> test criterion gating an EVT exit. I spent a year and a half as a PM at ASUS living inside that
+> problem.
+>
+> **What I owned** — the product end to end: a single project context covering requirements, NPI
+> stages, BOMs, engineering issues, files and email, with a two-stage agent on top that classifies
+> a request, loads only the tools that request needs, proposes changes, and **pauses for human
+> approval before writing anything** — then resumes from persisted state.
+>
+> **The core decision** — the domain shapes the data model, not the AI. Discipline (EE / ME / SW /
+> FW / PM / QTR) slices every artifact; BOMs, PRDs and schedules are versioned controlled
+> documents rather than editable pages; every specification carries a test criterion.
+>
+> **Where it stands** — stopped. The route to market was an accelerator whose ODM network would
+> have been the distribution channel; it reached the final interview round and was not selected,
+> and selling NPI software factory by factory is a field sales motion I was not going to win.
+
 Source code is private. This is the public write-up.
 
 ---
