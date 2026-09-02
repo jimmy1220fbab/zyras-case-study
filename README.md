@@ -22,38 +22,38 @@ Source code is private. This is the public write-up.
 ```mermaid
 flowchart TB
   subgraph Ingest["Ingestion"]
-    EMAIL[Supplier and team email<br/>per-project forwarding address]
-    FILES[Schedules, BOMs, reports<br/>xlsx / csv / pdf]
-    UI[Direct entry]
+    EMAIL["Supplier and team email<br/>per-project forwarding address"]
+    FILES["Schedules, BOMs, reports<br/>xlsx / csv / pdf"]
+    UI["Direct entry"]
   end
 
   subgraph Context["One project context"]
-    PRD[PRD<br/>features + specs with test criteria<br/>versioned, published]
-    BOM[BOM<br/>modules and line items<br/>versioned, published]
-    SCH[Schedule<br/>NPI stages: EVT / DVT / PVT / MP<br/>versioned, published]
-    ISS[Issues<br/>by discipline]
-    NOTE[Notes, files, chat]
+    PRD["PRD<br/>features + specs with test criteria<br/>versioned, published"]
+    BOM["BOM<br/>modules and line items<br/>versioned, published"]
+    SCH["Schedule<br/>NPI stages: EVT / DVT / PVT / MP<br/>versioned, published"]
+    ISS["Issues<br/>by discipline"]
+    NOTE["Notes, files, chat"]
   end
 
   subgraph Agent["Two-stage agent"]
-    CL[Stage 1 · Classifier<br/>small fast model<br/>picks relevant categories]
-    TOOLS[Dynamic tool loading<br/>only the tools those categories need]
-    EX[Stage 2 · Executor<br/>reads, proposes writes]
-    VAL[Validation]
-    APPROVE{Human approval}
+    CL["Stage 1 · Classifier<br/>small fast model<br/>picks relevant categories"]
+    TOOLS["Dynamic tool loading<br/>only the tools those categories need"]
+    EX["Stage 2 · Executor<br/>reads, proposes writes"]
+    VAL["Validation"]
+    APPROVE{"Human approval"}
   end
 
   subgraph Health["Project health"]
-    SCORE[Health score + ship-date risk]
-    FC[Next-week forecast<br/>with stated reasoning]
-    REC[Recommendations<br/>tied to specific issues]
+    SCORE["Health score + ship-date risk"]
+    FC["Next-week forecast<br/>with stated reasoning"]
+    REC["Recommendations<br/>tied to specific issues"]
   end
 
-  EMAIL --> EXTRACT[AI extraction<br/>decisions, actions, spec changes] --> Context
+  EMAIL --> EXTRACT["AI extraction<br/>decisions, actions, spec changes"] --> Context
   FILES --> EXTRACT
   UI --> Context
 
-  Context --> RAG[(Semantic index<br/>across every entity type)]
+  Context --> RAG[("Semantic index<br/>across every entity type")]
   RAG --> EX
   CL --> TOOLS --> EX --> VAL --> APPROVE
   APPROVE -->|approved| Context
